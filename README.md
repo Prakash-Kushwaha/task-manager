@@ -1,7 +1,8 @@
-# task-manager
-Ethereum Blockchain based Task Manager for creating, assigning and track tasks.
+# Task Manager
+Blockchain based Task Manager: A task management web application where users can create, assign, and track tasks using blockchain technology.
+- Smart contracts can be used to automate task assignments and ensure accountability.
 
-# Task-Manager Structure
+# Task Manager Structure
 
 ### **Task Struct**:
    - Inside the contract, there is a `struct` named `Task`, which represents a task.
