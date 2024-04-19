@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-// Sample user address: 0x94A4402D19F380b8340137F11C7233afdE4b8168
+// Sample user address: 0x94A4402D19F380b8340137F11C7233afdE4b8168, 0x9DA5A55d5df6f6378963caA76C27655f75Bbf070
 
 contract TaskManager {
     // Struct to represent a task
