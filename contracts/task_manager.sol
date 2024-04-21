@@ -30,7 +30,7 @@ contract TaskManager {
     event TaskCompleted(uint _taskId, string _taskName);
 
     // Declare an event to log user additions
-    event UserAdded(address _address);
+    event UserAdded(address _uaddress);
 
     // Function to create a new task
     function createTask(string calldata _taskName, address _assignedTo) public {
