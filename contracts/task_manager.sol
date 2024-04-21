@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.11;
 
 // Sample user address: 0x94A4402D19F380b8340137F11C7233afdE4b8168, 0x9DA5A55d5df6f6378963caA76C27655f75Bbf070
 
 contract TaskManager {
+    uint public taskCount = 0;
+
     // Struct to represent a task
     struct Task {
         uint taskId;
@@ -13,71 +15,64 @@ contract TaskManager {
     }
 
     // Array to store tasks
-    Task[] public tasks;
+    mapping(uint => Task) public tasks;
 
     // Mapping to store the address of task creator
-    mapping(address => uint[]) public tasksByCreator;
-
-    // Array to store users
-    address[] public users;
+    mapping(address => string[]) public tasksByCreator;
 
     // Mapping to store user existence
     mapping(address => bool) public userExists;
 
     // Event to emit when a new task is created
-    event TaskCreated(uint indexed taskId, string taskName, address indexed assignedTo);
+    event TaskCreated(uint _taskId, string _taskName, address _assignedTo);
 
     // Event to emit when a task is completed
-    event TaskCompleted(uint indexed taskId);
+    event TaskCompleted(uint _taskId, string _taskName);
 
-    // Event to emit when a new user is added
-    event UserAdded(address indexed user);
+    // Declare an event to log user additions
+    event UserAdded(address _address);
 
     // Function to create a new task
-    function createTask(string memory taskName, address assignedTo) public {
-        uint taskId = tasks.length;
+    function createTask(string calldata _taskName, address _assignedTo) public {
+        uint taskId = taskCount; // Store the current taskCount
 
-        tasks.push(Task(taskId, taskName, assignedTo, false));
-        tasksByCreator[msg.sender].push(taskId);
+        tasks[taskId] = Task(taskId, _taskName, _assignedTo, false);
+        tasksByCreator[_assignedTo].push(_taskName);
 
-        emit TaskCreated(taskId, taskName, assignedTo);
+        // Increment taskCount after using it
+        taskCount++;
+
+        emit TaskCreated(taskId, _taskName, _assignedTo);
     }
 
     // Function to mark a task as completed
-    function completeTask(uint taskId) public {
-        require(taskId < tasks.length, "Task ID does not exist");
+    function completeTask(uint _taskId) public {
+        require(_taskId < taskCount, "Task ID does not exist");
 
-        Task storage task = tasks[taskId];
-        require(task.assignedTo == msg.sender, "You are not authorized to complete this task");
+        Task storage task = tasks[_taskId]; // Use storage instead of memory to update the task in the mapping
+        // require(task.assignedTo == msg.sender, "You are not authorized to complete this task");
         require(!task.completed, "Task already completed");
 
         task.completed = true;
 
-        emit TaskCompleted(taskId);
-    }
-
-    // Function to get total number of tasks
-    function getTotalTasks() public view returns (uint) {
-        return tasks.length;
+        emit TaskCompleted(_taskId, task.taskName);
     }
 
     // Function to get tasks assigned to a specific user
-    function getTasksByUser(address user) public view returns (uint[] memory) {
-        return tasksByCreator[user];
+    function getTasksByUser(
+        address _uaddress
+    ) public view returns (string[] memory) {
+        return tasksByCreator[_uaddress];
     }
 
     // Function to add a new user
-    function addUser(address user) public {
-        require(!userExists[user], "User already exists");
+    function addUser(address _uaddress) public {
+        require(_uaddress != address(0), "Invalid address");
+        require(!userExists[_uaddress], "User already exists");
 
-        users.push(user);
-        userExists[user] = true;
+        // Store the user's name directly in the mapping
+        userExists[_uaddress] = true;
 
-        emit UserAdded(user);
-    }
-
-    // Function to get all current users on the chain
-    function getAllUsers() public view returns (address[] memory) {
-        return users;
+        emit UserAdded(_uaddress);
     }
 }
