@@ -3,6 +3,17 @@
     - A task management web application where users can create, assign, and track tasks using blockchain technology.
     - Smart contracts can be used to automate task assignments and ensure accountability.
 
+# Installation
+
+1. Change the current directory to this repo directory.
+2. Install the hardhat and ether: `npm install hardhat` & `npm install ether`
+3. Then, run the command: `npm install` (to install the dependecies of the project)
+
+### Run Project
+
+1. First, start the hardhat network for private blockchain: `npx hardhat node`
+2. Then, to deploy the smart contract on the blockchain run the command: `npx hardhat run scripts\deploy.js`
+
 # Smart Contract Structure
 
 ### **Task Struct**:
