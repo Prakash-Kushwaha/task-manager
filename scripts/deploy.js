@@ -24,8 +24,6 @@ async function main() {
 
   // Optionally, you can interact with the deployed contract here
   // For example:
-  const taskCount = await taskManager.taskCount();
-  console.log("Initial task count:", taskCount);
 }
 
 main()
