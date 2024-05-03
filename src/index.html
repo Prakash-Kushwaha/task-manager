@@ -7,262 +7,366 @@
     <title>Blockchain Task Manager</title>
     <script src="https://cdn.ethers.io/scripts/ethers-v4.min.js" charset="utf-8" type="text/javascript">
     </script>
+    <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
-    <h1>Blockchain Task Manager</h1>
+    <div id="container">
+        <div id="card">
+            <h1>Blockchain Task Manager</h1>
 
-    <div>
-        <label for="taskName">Task Name:</label>
-        <input type="text" id="taskName">
+            <fieldset>
+                <legend>Create Task: </legend>
+                <div>
+                    <label for="taskName">Task Name:</label>
+                    <input type="text" id="taskName">
+                </div>
+                <div>
+                    <label for="assignedTo">Assigned To (Ethereum address):</label>
+                    <input type="text" id="assignedTo">
+                </div>
+                <button onclick="createTask()">Create Task</button>
+            </fieldset>
+            <fieldset>
+                <legend>Total Tasks: </legend>
+                <div id="taskCount"></div>
+            </fieldset>
+            <fieldset>
+                <legend>Tasks By User: </legend>
+                <div>
+                    <label for="userAddress">User Address:</label>
+                    <input type="text" id="userAddress">
+                    <button onclick="getTasksByUser()">Get Tasks</button>
+                </div>
+
+                <div id="taskList"></div>
+            </fieldset>
+        </div>
     </div>
-    <div>
-        <label for="assignedTo">Assigned To (Ethereum address):</label>
-        <input type="text" id="assignedTo">
-    </div>
-    <button onclick="createTask()">Create Task</button>
-
-    <div id="taskCount"></div>
-
     <script>
-        async function createTask() {
-            const taskName = document.getElementById("taskName").value;
-            const assignedTo = document.getElementById("assignedTo").value;
+        // Global variables to store provider and contract instances
+        let provider;
+        let signer;
+        let contract;
 
-            // Connect to MetaMask provider
-            const provider = new ethers.providers.Web3Provider(window.ethereum);
+        // Function to connect to MetaMask and initialize contract
+        async function connectToMetaMask() {
+            try {
+                // Check if MetaMask is installed
+                if (window.ethereum) {
+                    // Connect to MetaMask provider
+                    provider = new ethers.providers.Web3Provider(window.ethereum);
 
-            // Request access to user's accounts
-            await window.ethereum.request({ method: 'eth_requestAccounts' });
+                    // Request access to user's accounts
+                    await window.ethereum.request({ method: 'eth_requestAccounts' });
 
-            // Get signer from MetaMask
-            const signer = provider.getSigner();
+                    // Get signer from MetaMask
+                    signer = provider.getSigner();
 
-            // // Connect to Ethereum network
-            // const provider = new ethers.providers.JsonRpcProvider("http://localhost:8545");
+                    // Load smart contract
+                    const contractAddress = "0x5fbdb2315678afecb367f032d93f642f64180aa3"; // Address of deployed TaskManager contract
+                    contract = new ethers.Contract(contractAddress, [
+                        {
+                            "anonymous": false,
+                            "inputs": [
+                                {
+                                    "indexed": false,
+                                    "internalType": "uint256",
+                                    "name": "_taskId",
+                                    "type": "uint256"
+                                },
+                                {
+                                    "indexed": false,
+                                    "internalType": "string",
+                                    "name": "_taskName",
+                                    "type": "string"
+                                }
+                            ],
+                            "name": "TaskCompleted",
+                            "type": "event"
+                        },
+                        {
+                            "anonymous": false,
+                            "inputs": [
+                                {
+                                    "indexed": false,
+                                    "internalType": "uint256",
+                                    "name": "_taskId",
+                                    "type": "uint256"
+                                },
+                                {
+                                    "indexed": false,
+                                    "internalType": "string",
+                                    "name": "_taskName",
+                                    "type": "string"
+                                },
+                                {
+                                    "indexed": false,
+                                    "internalType": "address",
+                                    "name": "_assignedTo",
+                                    "type": "address"
+                                }
+                            ],
+                            "name": "TaskCreated",
+                            "type": "event"
+                        },
+                        {
+                            "anonymous": false,
+                            "inputs": [
+                                {
+                                    "indexed": false,
+                                    "internalType": "address",
+                                    "name": "_uaddress",
+                                    "type": "address"
+                                }
+                            ],
+                            "name": "UserAdded",
+                            "type": "event"
+                        },
+                        {
+                            "inputs": [
+                                {
+                                    "internalType": "address",
+                                    "name": "_uaddress",
+                                    "type": "address"
+                                }
+                            ],
+                            "name": "addUser",
+                            "outputs": [],
+                            "stateMutability": "nonpayable",
+                            "type": "function"
+                        },
+                        {
+                            "inputs": [
+                                {
+                                    "internalType": "uint256",
+                                    "name": "_taskId",
+                                    "type": "uint256"
+                                }
+                            ],
+                            "name": "completeTask",
+                            "outputs": [],
+                            "stateMutability": "nonpayable",
+                            "type": "function"
+                        },
+                        {
+                            "inputs": [
+                                {
+                                    "internalType": "string",
+                                    "name": "_taskName",
+                                    "type": "string"
+                                },
+                                {
+                                    "internalType": "address",
+                                    "name": "_assignedTo",
+                                    "type": "address"
+                                }
+                            ],
+                            "name": "createTask",
+                            "outputs": [],
+                            "stateMutability": "nonpayable",
+                            "type": "function"
+                        },
+                        {
+                            "inputs": [
+                                {
+                                    "internalType": "address",
+                                    "name": "_uaddress",
+                                    "type": "address"
+                                }
+                            ],
+                            "name": "getTasksByUser",
+                            "outputs": [
+                                {
+                                    "internalType": "string[]",
+                                    "name": "",
+                                    "type": "string[]"
+                                }
+                            ],
+                            "stateMutability": "view",
+                            "type": "function"
+                        },
+                        {
+                            "inputs": [],
+                            "name": "taskCount",
+                            "outputs": [
+                                {
+                                    "internalType": "uint256",
+                                    "name": "",
+                                    "type": "uint256"
+                                }
+                            ],
+                            "stateMutability": "view",
+                            "type": "function"
+                        },
+                        {
+                            "inputs": [
+                                {
+                                    "internalType": "uint256",
+                                    "name": "",
+                                    "type": "uint256"
+                                }
+                            ],
+                            "name": "tasks",
+                            "outputs": [
+                                {
+                                    "internalType": "uint256",
+                                    "name": "taskId",
+                                    "type": "uint256"
+                                },
+                                {
+                                    "internalType": "string",
+                                    "name": "taskName",
+                                    "type": "string"
+                                },
+                                {
+                                    "internalType": "address",
+                                    "name": "assignedTo",
+                                    "type": "address"
+                                },
+                                {
+                                    "internalType": "bool",
+                                    "name": "completed",
+                                    "type": "bool"
+                                }
+                            ],
+                            "stateMutability": "view",
+                            "type": "function"
+                        },
+                        {
+                            "inputs": [
+                                {
+                                    "internalType": "address",
+                                    "name": "",
+                                    "type": "address"
+                                },
+                                {
+                                    "internalType": "uint256",
+                                    "name": "",
+                                    "type": "uint256"
+                                }
+                            ],
+                            "name": "tasksByCreator",
+                            "outputs": [
+                                {
+                                    "internalType": "string",
+                                    "name": "",
+                                    "type": "string"
+                                }
+                            ],
+                            "stateMutability": "view",
+                            "type": "function"
+                        },
+                        {
+                            "inputs": [
+                                {
+                                    "internalType": "address",
+                                    "name": "",
+                                    "type": "address"
+                                }
+                            ],
+                            "name": "userExists",
+                            "outputs": [
+                                {
+                                    "internalType": "bool",
+                                    "name": "",
+                                    "type": "bool"
+                                }
+                            ],
+                            "stateMutability": "view",
+                            "type": "function"
+                        }
+                    ], signer);
 
-            // Load smart contract
-            const contractAddress = "0x5fbdb2315678afecb367f032d93f642f64180aa3"; // Address of deployed TaskManager contract
-            const contract = new ethers.Contract(contractAddress, [
-                {
-                    "anonymous": false,
-                    "inputs": [
-                        {
-                            "indexed": false,
-                            "internalType": "uint256",
-                            "name": "_taskId",
-                            "type": "uint256"
-                        },
-                        {
-                            "indexed": false,
-                            "internalType": "string",
-                            "name": "_taskName",
-                            "type": "string"
-                        }
-                    ],
-                    "name": "TaskCompleted",
-                    "type": "event"
-                },
-                {
-                    "anonymous": false,
-                    "inputs": [
-                        {
-                            "indexed": false,
-                            "internalType": "uint256",
-                            "name": "_taskId",
-                            "type": "uint256"
-                        },
-                        {
-                            "indexed": false,
-                            "internalType": "string",
-                            "name": "_taskName",
-                            "type": "string"
-                        },
-                        {
-                            "indexed": false,
-                            "internalType": "address",
-                            "name": "_assignedTo",
-                            "type": "address"
-                        }
-                    ],
-                    "name": "TaskCreated",
-                    "type": "event"
-                },
-                {
-                    "anonymous": false,
-                    "inputs": [
-                        {
-                            "indexed": false,
-                            "internalType": "address",
-                            "name": "_uaddress",
-                            "type": "address"
-                        }
-                    ],
-                    "name": "UserAdded",
-                    "type": "event"
-                },
-                {
-                    "inputs": [
-                        {
-                            "internalType": "address",
-                            "name": "_uaddress",
-                            "type": "address"
-                        }
-                    ],
-                    "name": "addUser",
-                    "outputs": [],
-                    "stateMutability": "nonpayable",
-                    "type": "function"
-                },
-                {
-                    "inputs": [
-                        {
-                            "internalType": "uint256",
-                            "name": "_taskId",
-                            "type": "uint256"
-                        }
-                    ],
-                    "name": "completeTask",
-                    "outputs": [],
-                    "stateMutability": "nonpayable",
-                    "type": "function"
-                },
-                {
-                    "inputs": [
-                        {
-                            "internalType": "string",
-                            "name": "_taskName",
-                            "type": "string"
-                        },
-                        {
-                            "internalType": "address",
-                            "name": "_assignedTo",
-                            "type": "address"
-                        }
-                    ],
-                    "name": "createTask",
-                    "outputs": [],
-                    "stateMutability": "nonpayable",
-                    "type": "function"
-                },
-                {
-                    "inputs": [
-                        {
-                            "internalType": "address",
-                            "name": "_uaddress",
-                            "type": "address"
-                        }
-                    ],
-                    "name": "getTasksByUser",
-                    "outputs": [
-                        {
-                            "internalType": "string[]",
-                            "name": "",
-                            "type": "string[]"
-                        }
-                    ],
-                    "stateMutability": "view",
-                    "type": "function"
-                },
-                {
-                    "inputs": [],
-                    "name": "taskCount",
-                    "outputs": [
-                        {
-                            "internalType": "uint256",
-                            "name": "",
-                            "type": "uint256"
-                        }
-                    ],
-                    "stateMutability": "view",
-                    "type": "function"
-                },
-                {
-                    "inputs": [
-                        {
-                            "internalType": "uint256",
-                            "name": "",
-                            "type": "uint256"
-                        }
-                    ],
-                    "name": "tasks",
-                    "outputs": [
-                        {
-                            "internalType": "uint256",
-                            "name": "taskId",
-                            "type": "uint256"
-                        },
-                        {
-                            "internalType": "string",
-                            "name": "taskName",
-                            "type": "string"
-                        },
-                        {
-                            "internalType": "address",
-                            "name": "assignedTo",
-                            "type": "address"
-                        },
-                        {
-                            "internalType": "bool",
-                            "name": "completed",
-                            "type": "bool"
-                        }
-                    ],
-                    "stateMutability": "view",
-                    "type": "function"
-                },
-                {
-                    "inputs": [
-                        {
-                            "internalType": "address",
-                            "name": "",
-                            "type": "address"
-                        },
-                        {
-                            "internalType": "uint256",
-                            "name": "",
-                            "type": "uint256"
-                        }
-                    ],
-                    "name": "tasksByCreator",
-                    "outputs": [
-                        {
-                            "internalType": "string",
-                            "name": "",
-                            "type": "string"
-                        }
-                    ],
-                    "stateMutability": "view",
-                    "type": "function"
-                },
-                {
-                    "inputs": [
-                        {
-                            "internalType": "address",
-                            "name": "",
-                            "type": "address"
-                        }
-                    ],
-                    "name": "userExists",
-                    "outputs": [
-                        {
-                            "internalType": "bool",
-                            "name": "",
-                            "type": "bool"
-                        }
-                    ],
-                    "stateMutability": "view",
-                    "type": "function"
+                    // Update task count when connected
+                    updateTaskCount();
+                } else {
+                    console.error("MetaMask is not installed.");
                 }
-            ], signer);
+            } catch (error) {
+                console.error("Error:", error);
+            }
+        }
 
-            // Call createTask function
-            await contract.createTask(taskName, assignedTo);
+        // Function to create a task
+        async function createTask() {
+            try {
+                const taskName = document.getElementById("taskName").value;
+                const assignedTo = document.getElementById("assignedTo").value;
 
-            // Update task count
+                // Call createTask function
+                await contract.createTask(taskName, assignedTo);
+
+                // Update task count
+                updateTaskCount();
+            } catch (error) {
+                if (error.code === 4001) {
+                    // User denied transaction signature
+                    console.error("Transaction signature denied by the user.");
+                    // You can display a message to the user indicating that the transaction was not completed.
+                } else {
+                    // Other errors
+                    console.error("Error:", error.message);
+                    // You can handle other errors here
+                }
+            }
+        }
+
+
+        // Function to update task count
+        async function updateTaskCount() {
+            // Get task count
             const taskCount = await contract.taskCount();
+
+            // Update HTML element
             document.getElementById("taskCount").innerText = "Total Tasks: " + taskCount.toString();
         }
+
+        async function completeTask(taskId) {
+            await contract.completeTask(taskId);
+        }
+
+        async function getTasksByUser() {
+            const userAddress = document.getElementById("userAddress").value;
+            const tasks = await contract.getTasksByUser(userAddress);
+            console.log(tasks)
+            displayTasks(tasks);
+        }
+
+        function displayTasks(tasks) {
+            const taskListDiv = document.getElementById("taskList");
+
+            // Clear previous task list
+            taskListDiv.innerHTML = "";
+
+            // Create table element
+            const table = document.createElement("table");
+            table.border = "1";
+
+            // Create table header
+            const headerRow = table.insertRow();
+            const headerCell1 = headerRow.insertCell(0);
+            headerCell1.textContent = "Task ID";
+            const headerCell2 = headerRow.insertCell(1);
+            headerCell2.textContent = "Task Name";
+
+            // Populate table with tasks and indexes
+            tasks.forEach((task, index) => {
+                const row = table.insertRow();
+                const cell1 = row.insertCell(0);
+                cell1.textContent = index;
+                const cell2 = row.insertCell(1);
+                cell2.textContent = task;
+            });
+
+            // Append table to task list div
+            taskListDiv.appendChild(table);
+        }
+
+
+
+        // Connect to MetaMask and initialize contract when the page loads
+        window.onload = connectToMetaMask;
     </script>
 </body>
 

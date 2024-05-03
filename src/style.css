@@ -1,0 +1,34 @@
+
+#container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+h1 {
+    color: #af66e7;
+    font-family:Georgia;
+}
+
+#card {
+    text-align: center;
+
+    padding: 3rem;
+    border: 1px solid black;
+    border-radius: 2rem;
+}
+
+fieldset {
+    padding: 1rem 3rem;
+}
+
+button {
+    width: 6rem;
+    height: 2rem;
+
+}
+
+div, button {
+    padding: 0.5rem;
+}
