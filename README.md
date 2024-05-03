@@ -16,30 +16,30 @@
 
 # Smart Contract Structure
 
-### **Task Struct**:
-   - Inside the contract, there is a `struct` named `Task`, which represents a task.
-   - It contains four fields:
-     - `taskId`: A unique identifier for each task.
-     - `taskName`: A string describing the task.
-     - `assignedTo`: The Ethereum address of the user to whom the task is assigned.
-     - `completed`: A boolean indicating whether the task is completed.
-
 ### **State Variables**:
-   - `tasks`: An array to store instances of the `Task` struct, representing all tasks in the system.
-   - `tasksByCreator`: A mapping that maps the address of a task creator to an array of task IDs created by that address.
-   - `users`: An array to store the Ethereum addresses of all users in the system.
-   - `userExists`: A mapping that stores whether a user exists based on their Ethereum address.
+   - `uint public taskCount`: This variable keeps track of the total number of tasks created.
+   - `mapping(uint => Task) public tasks`: This mapping associates task IDs (uintegers) with Task structs.
+   - `mapping(address => string[]) public tasksByCreator`: This mapping associates Ethereum addresses with arrays of task names. It keeps track of tasks created by each address.
+   - `mapping(address => bool) public userExists`: This mapping checks whether a user (address) exists.
+
+### **Struct Definition**:
+   ```solidity
+   struct Task {
+       uint taskId;
+       string taskName;
+       address assignedTo;
+       bool completed;
+   }
+   ```
+   This struct represents a task with four properties: taskId (uint), taskName (string), assignedTo (Ethereum address), and completed (boolean).
 
 ### **Events**:
-   - Three events are declared to facilitate logging and external communication:
-     - `TaskCreated`: Logged when a new task is created. It includes the `taskId`, `taskName`, and `assignedTo` address.
-     - `TaskCompleted`: Logged when a task is marked as completed. It includes the `taskId`.
-     - `UserAdded`: Logged when a new user is added. It includes the user's Ethereum address.
+   - `event TaskCreated(uint _taskId, string _taskName, address _assignedTo)`: This event is emitted when a new task is created. It logs the task ID, task name, and the address to which the task is assigned.
+   - `event TaskCompleted(uint _taskId, string _taskName)`: This event is emitted when a task is marked as completed. It logs the task ID and task name.
+   - `event UserAdded(address _uaddress)`: This event is emitted when a new user is added. It logs the address of the newly added user.
 
 ### **Functions**:
-   - `createTask`: Creates a new task with the given `taskName` and assigns it to the specified `assignedTo` address. It emits the `TaskCreated` event.
-   - `completeTask`: Marks a task with the given `taskId` as completed, assuming the caller is authorized to do so. It emits the `TaskCompleted` event.
-   - `getTotalTasks`: Returns the total number of tasks in the system.
-   - `getTasksByUser`: Takes a user's Ethereum address as input and returns an array of task IDs assigned to that user.
-   - `addUser`: Adds a new user to the system with the specified Ethereum address. It emits the `UserAdded` event.
-   - `getAllUsers`: Returns an array containing the Ethereum addresses of all users in the system.
+   - `createTask`: Function to create a new task. It takes a task name and an address to assign the task to.
+   - `completeTask`: Function to mark a task as completed. It takes the task ID as input and sets the completed flag to true.
+   - `getTasksByUser`: Function to retrieve tasks assigned to a specific user. It takes the user's address as input and returns an array of task names.
+   - `addUser`: Function to add a new user. It takes the user's address as input and sets the userExists flag to true.
